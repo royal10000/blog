@@ -2,6 +2,7 @@ const Post = require("../models/post.model");
 const fs = require("fs");
 const path = require("path");
 const { generateCsrfToken } = require("../config/csrf.config");
+const { post } = require("../routes/auth.routes");
 require("../routes/post.routes");
 
 exports.allPost = async (req, res) => {
@@ -31,23 +32,31 @@ exports.allPost = async (req, res) => {
 };
 
 exports.singlePost = async (req, res) => {
-  const { id, slug } = req.params;
-  const post = await Post.aggregate([
-    {
-      $match: { _id: id },
-      $lookup: {
-        from: "users",
-        localField: "author",
-        foreignField: "_id",
-        as: "author",
+  try {
+    const { id, slug } = req.params;
+    const post = await Post.aggregate([
+      {
+        $match: { _id: id },
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        },
       },
-    },
-    { $unwind: "author" },
-    { $project: { "author.password": 0, "author._id": 0, "author.email": 0 } },
-  ]);
+      { $unwind: "author" },
+      {
+        $project: { "author.password": 0, "author._id": 0, "author.email": 0 },
+      },
+    ]);
 
-  if (post.slug !== slug) {
-    return res.redirect(`posts/${post._id}/${post.slug}`);
+    if (post.slug !== slug) {
+      return res.redirect(`posts/${post._id}/${post.slug}`);
+    }
+
+    res.status(200).json({ message: "post fetched successfully", data: post });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 exports.postForm = async (req, res) => {
@@ -128,24 +137,65 @@ exports.UpdatePost = async (req, res) => {
   }
 };
 exports.deletePost = async (req, res) => {
-  const { id } = req.params;
   try {
-    const existingPost = await Post.findByIdAndDelete(id);
-    if (!existingPost) {
-      return res.status(404).json({ message: "post not found" });
+    const { id } = req.params;
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
 
-    if (existingPost.image) {
-      const imagePath = path.resolve(__dirname, existingPost.image);
-      fs.unlink(imagePath, (err) => {
-        res
-          .status(403)
-          .json({ message: `error while deleting image ${err.message}` });
-      });
+    if (post.image) {
+      const imagePath = path.resolve(__dirname, post.image);
+
+      try {
+        await fs.unlink(imagePath);
+      } catch (err) {
+        if (err.code !== "ENOENT") {
+          return res.status(500).json({
+            message: "Error deleting image",
+            error: err.message,
+          });
+        }
+      }
     }
 
-    res.status(200).json({message:"post deleted successfully"})
+    const deletedPost = await Post.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Post deleted successfully",
+      data: deletedPost,
+    });
   } catch (error) {
-    res.status(500).json({ message: "error in deleting post" });
+    res.status(500).json({
+      message: "Error deleting post",
+      error: error.message,
+    });
   }
 };
+
+exports.getAllPost = async (req, res) => {
+  try {
+    const posts = await Post.find({ status: "published" }).select("-image");
+    if (posts.length < 1) {
+      return res.status(200).json({ message: "No posts available" });
+    }
+    res
+      .status(200)
+      .json({ message: "posts fetched successfully", data: posts });
+  } catch (error) {
+    res.status(500).json({ message: `error in getAllPost ${error.message}` });
+  }
+};
+
+exports.getPostByWriterOrAdmin=async(req,res)=>{
+  try {
+    const {userId,role}=req.token
+    if(role==="admin"){
+      
+    }
+    
+  } catch (error) {
+    res.status(500).json({message: `error in getpostbywriteoradmin ${error.message}`})
+  }
+}

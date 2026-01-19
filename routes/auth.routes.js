@@ -1,10 +1,11 @@
 const { doubleCsrfProtection } = require("../config/csrf.config");
-const { signUpForm } = require("../controller/auth.controller");
+const { signUpForm, loginForm, loginUser, signUpUser, logOut } = require("../controller/auth.controller");
 const jwtVerify = require("../middleware/jwt.middleware");
 
-const Router = require("express").Router;
-Router.get("/login", loginForm);
-Router.get("/signup", signUpForm);
-Router.post("/login", doubleCsrfProtection, loginForm);
-Router.post("/signup", doubleCsrfProtection, loginForm);
-Router.post("/logout", jwtVerify, loginForm);
+const authRouter = require("express").Router();
+authRouter.get("/login", loginForm);
+authRouter.get("/signup", signUpForm);
+authRouter.post("/login", doubleCsrfProtection, loginUser);
+authRouter.post("/signup", doubleCsrfProtection, signUpUser);
+authRouter.post("/logout", jwtVerify, logOut);
+module.exports=authRouter

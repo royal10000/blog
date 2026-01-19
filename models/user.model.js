@@ -17,12 +17,12 @@ const UserSchema = new mongoose.Schema({
         validator: validator.isEmail,
         message: "Please provide a valid Email",
       },
-      {
-        validator: function (value) {
-          return value.endsWith("@deu.ac.kr");
-        },
-        message: "only dongeui mail is required",
-      },
+      // {
+      //   validator: function (value) {
+      //     return value.endsWith("@deu.ac.kr");
+      //   },
+      //   message: "only dongeui mail is required",
+      // },
     ],
   },
   password: {

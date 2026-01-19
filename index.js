@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/database");
 const UserRoute = require("./routes/user.routes");
+const authRouter = require("./routes/auth.routes");
 const ErrorHandler = require("./middleware/errorHandler.middleware");
 const postRouter = require("./routes/post.routes");
 const session = require("express-session");
@@ -10,6 +11,9 @@ dotenv.config();
 
 const app = express();
 
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static("public"));
 app.use(cookieParser());
 app.use(
   session({
@@ -17,15 +21,14 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false },
-  })
+  }),
 );
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(express.static("public"));
 
+// router
 app.get("/", (req, res) => {
   res.send("hello world");
 });
+app.use("/auth", authRouter);
 app.use("/user", UserRoute);
 app.use("/posts", postRouter);
 

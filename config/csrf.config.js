@@ -1,12 +1,12 @@
 const { doubleCsrf } = require("csrf-csrf");
 require("dotenv").config();
 
-const csrfSecret = process.env.CSRFSECRET;
+const csrfSecret = process.env.CSRFSECRET|| "hello";
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => csrfSecret,
   getSessionIdentifier: (req) => req.session.id,
-  cookieName: "blog-cookie",
+  cookieName: "blogs",
   cookieOptions: {
     httpOnly: true,
     sameSite: "lax",

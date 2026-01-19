@@ -1,12 +1,11 @@
-const dotenv=require("dotenv")
+const dotenv = require("dotenv");
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { generateCsrfToken } = require("../config/csrf.config");
-dotenv.config()
-const jsonSecret=process.env.JWTSECRET
 
-
+dotenv.config();
+const jsonSecret = process.env.JWTSECRET;
 
 exports.loginForm = async (req, res) => {
   // res.json({message:"hello world"})
@@ -22,7 +21,7 @@ exports.loginUser = async (req, res) => {
   if (user.status === "blocked") {
     return res
       .status(404)
-      .json({ message: "sorry. This account has been blocked" });
+      .json({ message: "sorry. This account has been blocked. please try again with another account" });
   }
   // const hashedPassword = await bcrypt.hash(password, 10);
   const isMatched = await bcrypt.compare(password, user.password);
@@ -55,7 +54,7 @@ exports.logOut = async (req, res) => {
 };
 
 exports.signUpForm = async (req, res) => {
-  res.json({ csrfToken: generateCsrfToken() });
+  res.json({ csrfToken: generateCsrfToken(req, res) });
 };
 
 exports.signUpUser = async (req, res) => {
