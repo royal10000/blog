@@ -58,7 +58,6 @@ exports.postForm = async (req, res) => {
   }
 };
 exports.createPost = async (req, res) => {
-  console.log(req.token);
   const { userId } = req.token;
   const { title, content, status } = req.body;
   const image = req.file;
@@ -126,5 +125,27 @@ exports.UpdatePost = async (req, res) => {
       .json({ message: "post updated successfully ", data: existingPost });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+exports.deletePost = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const existingPost = await Post.findByIdAndDelete(id);
+    if (!existingPost) {
+      return res.status(404).json({ message: "post not found" });
+    }
+
+    if (existingPost.image) {
+      const imagePath = path.resolve(__dirname, existingPost.image);
+      fs.unlink(imagePath, (err) => {
+        res
+          .status(403)
+          .json({ message: `error while deleting image ${err.message}` });
+      });
+    }
+
+    res.status(200).json({message:"post deleted successfully"})
+  } catch (error) {
+    res.status(500).json({ message: "error in deleting post" });
   }
 };

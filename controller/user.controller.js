@@ -28,7 +28,7 @@ exports.loginUser = async (req, res) => {
       .status(404)
       .json({ message: "password don't match. Please Enter correct password" });
   }
-  const token = jwt.sign({ userId: user._id, email: user.email }, jsonSecret, {
+  const token = jwt.sign({ userId: user._id, email: user.email ,role:user.role}, jsonSecret, {
     expiresIn: "1h",
   });
   res.cookie("access_token", token, {
@@ -78,7 +78,6 @@ exports.profile = async (req, res) => {
   res.json("this is profile page");
 };
 
-exports.checkRole = async (req, res) => {};
 
 exports.assignRole = async (req, res) => {};
 

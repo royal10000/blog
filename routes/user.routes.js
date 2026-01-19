@@ -25,4 +25,5 @@ UserRoute.get("/signup", signUpForm);
 UserRoute.post("/signup",  doubleCsrfProtection, signUpUser);
 
 UserRoute.post("/logout", jwtVerify, doubleCsrfProtection, logOut);
+UserRoute.post("/role/:id", jwtVerify, doubleCsrfProtection, logOut);
 module.exports = UserRoute;
