@@ -6,4 +6,4 @@ const authorize = (...roles) => {
   next();
 };
 
-module.exports = isAdmin;
+module.exports = authorize;

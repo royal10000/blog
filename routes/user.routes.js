@@ -1,13 +1,10 @@
 const { doubleCsrfProtection } = require("../config/csrf.config");
 const {
-  loginForm,
-  loginUser,
-  signUpForm,
-  signUpUser,
   profile,
-  logOut,
+  assignRole,
 } = require("../controller/user.controller");
 const jwtVerify = require("../middleware/jwt.middleware");
+const authorize = require("../middleware/authorize.middleware");
 const UserRoute = require("express").Router();
 
 
@@ -16,14 +13,5 @@ UserRoute.get("/", (req, res) => {
 });
 UserRoute.get("/profile", jwtVerify, profile);
 
-UserRoute.get("/login", loginForm);
-
-UserRoute.post("/login", doubleCsrfProtection, loginUser);
-
-UserRoute.get("/signup", signUpForm);
-
-UserRoute.post("/signup",  doubleCsrfProtection, signUpUser);
-
-UserRoute.post("/logout", jwtVerify, doubleCsrfProtection, logOut);
-UserRoute.post("/role/:id", jwtVerify, doubleCsrfProtection, logOut);
+UserRoute.patch("/assignrole/:id", jwtVerify,authorize("admin"), doubleCsrfProtection, assignRole);
 module.exports = UserRoute;
