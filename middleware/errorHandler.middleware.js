@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 
 const ErrorHandler = (err, req, res, next) => {
-console.log(err)
+  console.log(err);
   // Multer errors
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ message: err.message });
@@ -30,10 +30,7 @@ console.log(err)
   const statusCode = err.statusCode || 500;
 
   return res.status(statusCode).json({
-    message:
-      statusCode === 500
-        ? "Internal Server Error"
-        : err.message,
+    message: statusCode === 500 ? "Internal Server Error" : err.message,
   });
 };
 

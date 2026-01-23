@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { generateCsrfToken } = require("../config/csrf.config");
 const { post } = require("../routes/auth.routes");
+const { default: mongoose } = require("mongoose");
 require("../routes/post.routes");
 
 exports.allPost = async (req, res) => {
@@ -35,8 +36,8 @@ exports.singlePost = async (req, res) => {
   try {
     const { id, slug } = req.params;
     const post = await Post.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
       {
-        $match: { _id: id },
         $lookup: {
           from: "users",
           localField: "author",
@@ -44,17 +45,28 @@ exports.singlePost = async (req, res) => {
           as: "author",
         },
       },
-      { $unwind: "author" },
+
+      { $unwind: "$author" },
       {
         $project: { "author.password": 0, "author._id": 0, "author.email": 0 },
       },
     ]);
 
-    if (post.slug !== slug) {
-      return res.redirect(`posts/${post._id}/${post.slug}`);
+    if (!post.length) {
+      return res.status(404).json({ message: "Post not found" });
     }
 
-    res.status(200).json({ message: "post fetched successfully", data: post });
+    const singlePost = post[0];
+
+    // Slug mismatch → redirect to correct URL
+    if (singlePost.slug !== slug) {
+      return res.redirect(`/posts/${singlePost._id}/${singlePost.slug}`);
+    }
+
+    res.status(200).json({
+      message: "Post fetched successfully",
+      data: singlePost,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -174,28 +186,42 @@ exports.deletePost = async (req, res) => {
   }
 };
 
-exports.getAllPost = async (req, res) => {
+
+
+// exports.getAllPost = async (req, res) => {
+//   try {
+//     const posts = await Post.find({ status: "published" }).select("-image");
+//     if (posts.length < 1) {
+//       return res.status(200).json({ message: "No posts available" });
+//     }
+//     res
+//       .status(200)
+//       .json({ message: "posts fetched successfully", data: posts });
+//   } catch (error) {
+//     res.status(500).json({ message: `error in getAllPost ${error.message}` });
+//   }
+// };
+
+exports.getPostByWriterOrAdmin = async (req, res) => {
   try {
-    const posts = await Post.find({ status: "published" }).select("-image");
-    if (posts.length < 1) {
-      return res.status(200).json({ message: "No posts available" });
+    const { userId, role } = req.token;
+    if (role === "admin") {
+      const posts = await Post.find();
+      if (!posts) {
+        return res.status(200).json({ message: "no post available" });
+      }
+      return res.status(200).json({ message: "posts fetched successfully" });
     }
-    res
-      .status(200)
-      .json({ message: "posts fetched successfully", data: posts });
+    if (role === "author") {
+      const posts = await Post.find({ author: userId });
+      if (!posts) {
+        return res.status(200).json({ message: "no post available" });
+      }
+      return res.status(200).json({ message: "posts fetched successfully" });
+    }
   } catch (error) {
-    res.status(500).json({ message: `error in getAllPost ${error.message}` });
+    res
+      .status(500)
+      .json({ message: `error in getpostbywriteoradmin ${error.message}` });
   }
 };
-
-exports.getPostByWriterOrAdmin=async(req,res)=>{
-  try {
-    const {userId,role}=req.token
-    if(role==="admin"){
-      
-    }
-    
-  } catch (error) {
-    res.status(500).json({message: `error in getpostbywriteoradmin ${error.message}`})
-  }
-}

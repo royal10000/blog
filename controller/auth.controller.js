@@ -48,11 +48,6 @@ exports.loginUser = async (req, res) => {
   res.json({ message: "user is logged in", token: token });
 };
 
-exports.logOut = async (req, res) => {
-  res.clearCookie("access_token");
-  res.status(200).json({ message: "logged out successfully" });
-};
-
 exports.signUpForm = async (req, res) => {
   res.json({ csrfToken: generateCsrfToken(req, res) });
 };
@@ -79,4 +74,9 @@ exports.signUpUser = async (req, res) => {
     message: "user created successfully",
     role: user.role,
   });
+};
+
+exports.logOut = async (req, res) => {
+  res.clearCookie("access_token");
+  res.status(200).json({ message: "logged out successfully" });
 };
